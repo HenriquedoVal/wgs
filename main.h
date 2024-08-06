@@ -60,7 +60,6 @@ typedef struct {
     DirEntry **entries;
     size_t capacity;
     size_t qtt;
-    size_t files_qtt;
 } Dir;
 
 typedef struct {
@@ -75,5 +74,12 @@ static EntireFile g_entire_file;
 
 extern int fnmatch(char *spec, char *path);
 GitStatus gitstatus(const char *path);
+void setup_memory(void);
 void reset_memory(void);
-void setup(void);
+void free_memory(void);
+
+#define ARENA_PAGE_MUL 64  // 256kb if pf = 4kb
+#define ARENA_IMPLEMENTATION
+#include "arena.h"
+
+static Arena g_arena = {0};

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "arena.c"
+#include "arena.h"
 
 
 static char *strtolower(const char *_str)
@@ -16,7 +16,7 @@ static char *strtolower(const char *_str)
     if (_str == NULL) return NULL;
 
     char *str, *p;
-    str = arena_strdup(_str);
+    str = arena_strdup(&g_arena, _str);
     p = str;
 
     while (*p) {

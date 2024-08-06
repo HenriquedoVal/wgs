@@ -14,7 +14,9 @@ static PyObject * wgs_gitstatus(PyObject *self, PyObject *args) {
 
     GitStatus gs = gitstatus(path);
     PyObject *tuple = Py_BuildValue("iss", gs.git_found, gs.branch, gs.status);
+
     reset_memory();
+
     return tuple;
 };
 
@@ -35,8 +37,6 @@ static struct PyModuleDef wgs_module = {
 
 
 PyMODINIT_FUNC PyInit_wgs() {
-    setup();
+    setup_memory();
     return PyModule_Create(&wgs_module);
 };
-
-

@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    setup();
+    setup_memory();
 
     for (int i = 1; i < argc; i++) {
         const char *path = argv[i];
@@ -27,6 +27,8 @@ int main(int argc, char **argv) {
         );
         reset_memory();
     }
+
+    free_memory();
 
     return 0;
 }

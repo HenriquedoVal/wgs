@@ -3,6 +3,12 @@
 // #define LOG_LEVEL LOG_ERROR
 #ifdef LOG_LEVEL
 
+#ifdef LOG_EXACT
+#   define _GT_OR_NE !=
+#else
+#   define _GT_OR_NE >
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
@@ -23,8 +29,11 @@ typedef enum {
 
 static void logger(LogLevel lv, const char *fmt, ...)
 {
-    if (lv > LOG_LEVEL) return;
+    if (lv _GT_OR_NE LOG_LEVEL)
+        return;
+
     printf("%c", 27);
+
     switch (lv) {
         case LOG_ERROR:      printf("[31m[ERROR]: ");  break;
         case LOG_INFO:       printf("[32m[INFO]: ");   break;
@@ -34,6 +43,7 @@ static void logger(LogLevel lv, const char *fmt, ...)
         case LOG_DEBUG:      printf("[36m[DEBUG]: ");  break;
         default: assert(0 && "Unreachable");
     }
+
     va_list ap;
     va_start(ap, fmt);
     vprintf_s(fmt, ap);
@@ -42,9 +52,16 @@ static void logger(LogLevel lv, const char *fmt, ...)
     printf("%c[0m\n", 27);
 }
 
-static void logger_iter_ign(LogLevel lv, Ignore *ign, const char *mask) {
+static void logger_iter_ign(Ignore *ign, const char *path) {
+    logger(LOG_DEBUG, "%s/.gitignore", path);
+
+    if (ign == NULL) {
+        logger(LOG_DEBUG, "NULL");
+        return;
+    }
+        
     for (int i = 0; i < ign->qtt; i++) {
-        logger(LOG_DEBUG, mask, ign->specs[i]);
+        logger(LOG_DEBUG, "\t%s", ign->specs[i]);
     }
 }
 #else

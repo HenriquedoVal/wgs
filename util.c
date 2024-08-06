@@ -1,16 +1,18 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <Windows.h>
 
-#include "arena.c"
+#include "arena.h"
 
 
 static char *GetLastErrorAsString(unsigned long id) {
     if (0 == id)
         return NULL;
 
+    Arena a = {0};
     LPSTR win32_buffer = NULL;
 
     size_t size = FormatMessageA(
@@ -26,17 +28,18 @@ static char *GetLastErrorAsString(unsigned long id) {
     );
     assert(size);
 
-    char *our_buffer = arena_alloc(size + 1);
+    char *our_buffer = arena_alloc(&a, size + 1);
     memcpy(our_buffer, win32_buffer, size);
     our_buffer[size] = '\0';
     LocalFree(win32_buffer);
     return our_buffer;
 }
 
-
-#define log_crash_win32_error(id)                                                             \
-    logger(LOG_ERROR, "%s:%i: Win error: %s", __FILE__, __LINE__, GetLastErrorAsString(id));  \
-    assert(0 && "Check error log")
+#define log_crash_win32_error(id)                                                                 \
+    do {                                                                                          \
+        logger(LOG_ERROR, "%s:%i: Win error: %s", __FILE__, __LINE__, GetLastErrorAsString(id));  \
+        assert(0 && "Check error log");                                                           \
+    } while (0)
 
 
 static bool path_exists(char *p)

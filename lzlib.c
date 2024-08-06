@@ -7,6 +7,7 @@
 #include "main.h"
 
 #include "util.c"
+#include "logger.c"
 
 
 typedef struct {
@@ -19,7 +20,7 @@ typedef struct {
 static ZlibBuffer g_zlib_buffer;
 
 
-static int zlib_inflate(HANDLE source, char **dest, size_t *dest_size)
+static int zlib_inflate_source(HANDLE source, char **dest, size_t *dest_size)
 {
     int ret;
     unsigned have;
@@ -63,12 +64,17 @@ static int zlib_inflate(HANDLE source, char **dest, size_t *dest_size)
             if (needed > g_zlib_buffer.capacity) {
                 HANDLE heap = GetProcessHeap();
                 assert(heap != NULL);
+
+                logger(LOG_DEBUG_MEM, "lzlib:");
+                logger(LOG_DEBUG_MEM, "\t%p realloc prev", g_zlib_buffer.data);
+
                 void *nptr = HeapReAlloc(heap, 0, g_zlib_buffer.data, needed);
                 assert(nptr != NULL);
                 g_zlib_buffer.data = nptr;
                 g_zlib_buffer.capacity = needed;
                 g_zlib_buffer.end_ptr = g_zlib_buffer.data + *dest_size;
-                logger(LOG_DEBUG_MEM, "Zlib arena realloc %zu bytes", needed);
+
+                logger(LOG_DEBUG_MEM, "\t%p realloc post", g_zlib_buffer.data);
             }
 
             errno_t err = memcpy_s(
@@ -126,7 +132,7 @@ static void zlib_error(int ret)
 }
 
 
-static char *zlib_deflate(size_t obj_size,
+static char *zlib_inflate(size_t obj_size,
                              unsigned char *buf,
                              FileMap *fm,
                              size_t *dest_size)
@@ -134,10 +140,17 @@ static char *zlib_deflate(size_t obj_size,
     if (obj_size > g_zlib_buffer.capacity) {
         HANDLE heap = GetProcessHeap();
         assert(heap != NULL);
+
+        logger(LOG_DEBUG_MEM, "lzlib:");
+        logger(LOG_DEBUG_MEM, "\t%p freed", g_zlib_buffer.data);
+
         int ret = HeapFree(heap, 0, g_zlib_buffer.data);
         assert(ret);
         g_zlib_buffer.data = HeapAlloc(heap, 0, obj_size + 1);
         assert(g_zlib_buffer.data != NULL);
+
+        logger(LOG_DEBUG_MEM, "\t%p alloc", g_zlib_buffer.data);
+
         g_zlib_buffer.capacity = obj_size + 1;
     }
 
@@ -164,7 +177,8 @@ static char *zlib_deflate(size_t obj_size,
         strm.next_out = (Bytef *)(g_zlib_buffer.data + strm.total_out);
 
         ret = inflate(&strm, Z_NO_FLUSH);
-        if (ret == Z_STREAM_END) break;
+        if (ret == Z_STREAM_END)
+            break;
         zlib_error(ret);
 
         input_done += it_in;

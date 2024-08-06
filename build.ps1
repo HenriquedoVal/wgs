@@ -12,7 +12,10 @@ if (-not (Test-Path build\fnmatch.lib) -or $Odin.IsPresent -or $All.IsPresent) {
 }
 
 if ($Python.IsPresent -or $All.IsPresent) {
-    python .\setup.py build
+    # python .\setup.py build         # or
+    # python -m build                 # or
+    pip install .                     # or
+    # pip install --editable .
     if (-not $?) { return }
 }
 
@@ -31,6 +34,7 @@ $rel_args = @(
 )
 
 $gen_args = @(
+    "-Femain",
     "fnmatch.lib",
     "..\main.c",
     "-link",

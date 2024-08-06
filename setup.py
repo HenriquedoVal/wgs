@@ -1,4 +1,3 @@
-import os
 from setuptools import setup, Extension
 
 setup(
@@ -6,7 +5,7 @@ setup(
     ext_modules=[
         Extension(
             'wgs', ['main.c'],
-            libraries=["build\\fnmatch", "zlib", "libcrypto_static"],
+            libraries=["fnmatch", "zlib", "libcrypto_static"],
 
             define_macros=[
                 # ("LOG_LEVEL", "LOG_ERROR"),
